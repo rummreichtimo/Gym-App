@@ -89,6 +89,10 @@ export const Textarea = forwardRef<
   );
 });
 
+/** Inline chevron so the select keeps the themed background colour. */
+const CHEVRON =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa3b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")";
+
 export const Select = forwardRef<
   HTMLSelectElement,
   React.SelectHTMLAttributes<HTMLSelectElement> & FieldProps
@@ -106,13 +110,18 @@ export const Select = forwardRef<
         ref={ref}
         id={inputId}
         className={cn(
-          'h-11 w-full appearance-none rounded-xl border bg-surface-2 bg-[length:18px] bg-[right_0.85rem_center] bg-no-repeat px-3.5 pr-10 text-fg',
+          'h-11 w-full appearance-none rounded-xl border bg-surface-2 px-3.5 pr-10 text-fg',
           'transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30',
           error ? 'border-danger' : 'border-border',
         )}
+        // The chevron lives in `style` rather than in Tailwind's arbitrary
+        // background utilities: tailwind-merge treats those as conflicting with
+        // `bg-surface-2` and would drop the background colour.
         style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa3b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+          backgroundImage: CHEVRON,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 0.85rem center',
+          backgroundSize: '18px',
         }}
         {...props}
       >

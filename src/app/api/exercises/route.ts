@@ -16,7 +16,9 @@ export const GET = withUser(async (user, request) => {
   const and: Prisma.ExerciseWhereInput[] = [];
 
   if (query.search?.trim()) {
-    and.push({ name: { contains: query.search.trim() } });
+    // `mode: 'insensitive'` is required on PostgreSQL: plain `contains`
+    // compiles to LIKE, which is case-sensitive there.
+    and.push({ name: { contains: query.search.trim(), mode: 'insensitive' } });
   }
   if (query.muscleGroup && query.muscleGroup !== 'all') {
     and.push({

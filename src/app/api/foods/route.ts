@@ -23,7 +23,15 @@ export const GET = withUser(async (user, request) => {
     OR: [{ userId: null }, { userId: user.id }],
   };
   const and: Prisma.FoodWhereInput[] = [];
-  if (search) and.push({ OR: [{ name: { contains: search } }, { brand: { contains: search } }] });
+  if (search) {
+    // Case-insensitive on PostgreSQL, where plain `contains` would be LIKE.
+    and.push({
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { brand: { contains: search, mode: 'insensitive' } },
+      ],
+    });
+  }
   if (category && category !== 'all') and.push({ category });
   if (onlyCustom) and.push({ userId: user.id });
   if (and.length > 0) where.AND = and;

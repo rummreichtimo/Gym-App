@@ -1,14 +1,15 @@
 // IronPath database schema
-// Provider: SQLite for zero-config local development. Every model that holds
-// user content carries a userId FK so queries can always be scoped to the
-// authenticated user (see src/server/auth.ts + src/server/api.ts).
+// Provider: PostgreSQL, in local development and in production alike, so the
+// two never diverge. Every model that holds user content carries a userId FK
+// so queries can always be scoped to the authenticated user
+// (see src/server/auth.ts + src/server/api.ts).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

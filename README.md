@@ -12,28 +12,67 @@ Alle Daten werden persistent gespeichert und sind strikt pro Benutzerkonto isoli
 
 ```bash
 npm install
-cp .env.example .env      # DATABASE_URL und AUTH_SECRET anpassen
+cp .env.example .env      # Werte passen bereits zu docker compose
+docker compose up -d      # PostgreSQL 16 auf Port 5432
 npm run setup             # Prisma-Client, Migration und Seed-Daten
 npm run dev               # http://localhost:3000
 ```
 
-`npm run setup` erstellt die SQLite-Datenbank, legt das Schema an und füllt die
-Übungs- und Lebensmitteldatenbank (55 Übungen, 85 Lebensmittel).
+`npm run setup` legt das Schema an und füllt die Übungs- und
+Lebensmitteldatenbank (55 Übungen, 85 Lebensmittel).
 
 Danach registrieren, das Onboarding durchlaufen — die App legt automatisch einen
 zu deiner Trainingsfrequenz passenden Startplan an — und loslegen.
 
-### Produktion
+Ohne Docker geht auch jede andere PostgreSQL-Instanz: einfach die
+`DATABASE_URL` in `.env` darauf zeigen lassen.
+
+---
+
+## Deployment
+
+> **Wichtig:** IronPath ist **keine statische Website**. Sie besteht aus 55
+> API-Routen, einer PostgreSQL-Datenbank und serverseitigen Sessions. Auf
+> **GitHub Pages läuft sie deshalb nicht** — GitHub Pages liefert ausschließlich
+> statische Dateien aus und zeigt ohne `index.html` nur die README an.
+> Es braucht einen Host, der Node.js ausführt.
+
+Nötig sind zwei Dinge: ein Node-Host und eine PostgreSQL-Datenbank.
+
+### Variante A — Vercel + Neon (kostenlos, empfohlen)
+
+1. **Datenbank:** Auf [neon.tech](https://neon.tech) ein Projekt anlegen und den
+   Connection String kopieren.
+2. **Import:** Auf [vercel.com/new](https://vercel.com/new) dieses Repository
+   importieren. Vercel erkennt Next.js automatisch.
+3. **Environment Variables** setzen:
+   - `DATABASE_URL` — der Connection String von Neon
+   - `AUTH_SECRET` — `openssl rand -base64 32`
+4. **Deploy.** Der Build-Befehl führt `prisma migrate deploy` aus und legt das
+   Schema an.
+5. **Seed einmalig ausführen**, damit Übungen und Lebensmittel vorhanden sind:
+   ```bash
+   DATABASE_URL="<neon-url>" npx tsx prisma/seed.ts
+   ```
+
+### Variante B — eigener Server oder Container
 
 ```bash
-npm run build
-npm start
+docker compose up -d          # oder eine bestehende PostgreSQL-Instanz
+npm ci
+npm run build                 # generiert Client, migriert, baut
+npm start                     # Port 3000
 ```
 
-**Vor dem Deployment:** `AUTH_SECRET` auf einen langen Zufallswert setzen. Für
-PostgreSQL statt SQLite in `prisma/schema.prisma` den `provider` auf
-`postgresql` ändern und `DATABASE_URL` entsprechend setzen — das Schema ist
-provider-neutral.
+Davor einen Reverse Proxy mit HTTPS setzen — die Session-Cookies werden in
+Produktion mit `secure` ausgeliefert und funktionieren nur über HTTPS.
+
+### Checkliste vor dem Livegang
+
+- [ ] `AUTH_SECRET` ist ein langer Zufallswert, nicht der Beispielwert
+- [ ] `DATABASE_URL` zeigt auf die Produktionsdatenbank
+- [ ] Die App ist über HTTPS erreichbar
+- [ ] Der Seed wurde einmal ausgeführt
 
 ---
 
@@ -43,7 +82,7 @@ provider-neutral.
 | ---------------- | ------------------------------------- | ------------------------------------------------------------ |
 | Framework        | Next.js 15 (App Router)               | Server Components, API-Routen und UI in einem Projekt         |
 | Sprache          | TypeScript (strict)                   | Durchgehende Typsicherheit von der DB bis zur Komponente      |
-| Datenbank        | Prisma + SQLite                       | Zero-Config lokal, ohne Codeänderung auf PostgreSQL wechselbar |
+| Datenbank        | Prisma + PostgreSQL                   | Gleiche Engine lokal wie in Produktion, keine Abweichungen    |
 | Auth             | Eigene Sessions, scrypt (Node crypto)  | Keine externe Abhängigkeit, httpOnly-Cookies                  |
 | Styling          | Tailwind CSS mit CSS-Variablen-Theme  | Dark/Light zur Laufzeit umschaltbar                           |
 | Client-State     | TanStack Query                        | Caching und Invalidierung nach jeder Mutation                 |
@@ -167,6 +206,7 @@ verändert daher keine gespeicherten Werte.
 | `npm start`          | Produktionsserver                                |
 | `npm run setup`      | Client, Migration und Seed-Daten in einem Schritt |
 | `npm run db:seed`    | Übungs- und Lebensmitteldatenbank neu befüllen   |
+| `docker compose up -d` | Lokale PostgreSQL-Instanz starten              |
 | `npm run typecheck`  | TypeScript prüfen                                |
 | `npm run lint`       | ESLint                                           |
 

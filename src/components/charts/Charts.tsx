@@ -29,6 +29,14 @@ const AXIS = {
   axisLine: false,
 } as const;
 
+/** Compact, locale-correct axis labels: 8.420 -> "8,4k". */
+function axisTick(value: number) {
+  if (!Number.isFinite(value)) return '';
+  if (Math.abs(value) >= 10_000) return `${formatNumber(value / 1000, 0)}k`;
+  if (Math.abs(value) >= 1000) return `${formatNumber(value / 1000, 1)}k`;
+  return formatNumber(value, Number.isInteger(value) ? 0 : 1);
+}
+
 const COLORS = {
   brand: 'rgb(var(--brand))',
   success: 'rgb(var(--success))',
@@ -90,7 +98,7 @@ export function TrendChart({
   return (
     <ResponsiveContainer width="100%" height={height}>
       {area ? (
-        <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={stroke} stopOpacity={0.35} />
@@ -99,7 +107,14 @@ export function TrendChart({
           </defs>
           <CartesianGrid stroke="rgb(var(--border))" strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="label" {...AXIS} minTickGap={24} />
-          <YAxis {...AXIS} width={48} domain={['auto', 'auto']} />
+          <YAxis
+            {...AXIS}
+            width={52}
+            tickMargin={6}
+            tickCount={5}
+            tickFormatter={axisTick}
+            domain={['auto', 'auto']}
+          />
           <ChartTooltip unit={unit} decimals={decimals} />
           <Area
             type="monotone"
@@ -112,10 +127,17 @@ export function TrendChart({
           />
         </AreaChart>
       ) : (
-        <LineChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid stroke="rgb(var(--border))" strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="label" {...AXIS} minTickGap={24} />
-          <YAxis {...AXIS} width={48} domain={['auto', 'auto']} />
+          <YAxis
+            {...AXIS}
+            width={52}
+            tickMargin={6}
+            tickCount={5}
+            tickFormatter={axisTick}
+            domain={['auto', 'auto']}
+          />
           <ChartTooltip unit={unit} decimals={decimals} />
           <Line
             type="monotone"
@@ -148,10 +170,10 @@ export function BarSeriesChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="rgb(var(--border))" strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="label" {...AXIS} minTickGap={12} />
-        <YAxis {...AXIS} width={48} allowDecimals={false} />
+        <YAxis {...AXIS} width={52} tickMargin={6} tickFormatter={axisTick} allowDecimals={false} />
         <ChartTooltip unit={unit} />
         <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={44}>
           {data.map((point, index) => (

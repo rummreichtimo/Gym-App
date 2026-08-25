@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Dark is the default IronPath look. */
+  :root {
+    --bg: 9 11 16;
+    --surface: 17 20 28;
+    --surface-2: 23 27 37;
+    --elevated: 30 35 47;
+    --border: 39 45 60;
+    --fg: 244 246 250;
+    --muted: 154 163 181;
+    --subtle: 106 115 133;
+    --brand: 255 92 46;
+    --brand-soft: 255 92 46;
+    --brand-fg: 255 255 255;
+    --success: 52 199 123;
+    --warning: 245 179 66;
+    --danger: 244 84 84;
+    --info: 90 162 255;
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color-scheme: dark;
+  }
+
+  .light {
+    --bg: 246 247 250;
+    --surface: 255 255 255;
+    --surface-2: 248 249 252;
+    --elevated: 255 255 255;
+    --border: 224 228 236;
+    --fg: 18 21 28;
+    --muted: 90 99 117;
+    --subtle: 130 139 157;
+    --brand: 234 71 24;
+    --brand-soft: 234 71 24;
+    --brand-fg: 255 255 255;
+    --success: 22 152 88;
+    --warning: 190 128 20;
+    --danger: 206 46 46;
+    --info: 34 106 214;
+    color-scheme: light;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    /* Never let a page scroll sideways on small screens. */
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Respect the iOS safe area on the bottom tab bar. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  ::selection {
+    background: rgb(var(--brand) / 0.35);
+  }
+
+  /* Slim, unobtrusive scrollbars that match the theme. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--border));
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--subtle));
+    background-clip: content-box;
+  }
+
+  /* Remove spinner arrows: weight/rep fields use custom steppers. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-border bg-surface shadow-card;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Tap targets feel native: no blue flash, no accidental text selection. */
+  .tap {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

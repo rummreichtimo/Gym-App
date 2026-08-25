@@ -41,19 +41,32 @@ Nötig sind zwei Dinge: ein Node-Host und eine PostgreSQL-Datenbank.
 
 ### Variante A — Vercel + Neon (kostenlos, empfohlen)
 
-1. **Datenbank:** Auf [neon.tech](https://neon.tech) ein Projekt anlegen und den
-   Connection String kopieren.
+1. **Datenbank:** Auf [neon.tech](https://neon.tech) ein Projekt anlegen.
+   Neon zeigt zwei Connection Strings — du brauchst **beide**:
+   - den **gepoolten** (enthält `-pooler`) für die laufende App
+   - den **direkten** (ohne `-pooler`) für die Migrationen
 2. **Import:** Auf [vercel.com/new](https://vercel.com/new) dieses Repository
-   importieren. Vercel erkennt Next.js automatisch.
-3. **Environment Variables** setzen:
-   - `DATABASE_URL` — der Connection String von Neon
-   - `AUTH_SECRET` — `openssl rand -base64 32`
-4. **Deploy.** Der Build-Befehl führt `prisma migrate deploy` aus und legt das
-   Schema an.
+   importieren. Vercel erkennt Next.js automatisch — Build- und
+   Output-Einstellungen nicht anfassen.
+3. **Environment Variables** setzen (alle drei, für alle Environments):
+
+   | Name           | Wert                                      |
+   | -------------- | ----------------------------------------- |
+   | `DATABASE_URL` | gepoolter Connection String (`-pooler`)   |
+   | `DIRECT_URL`   | direkter Connection String                |
+   | `AUTH_SECRET`  | Ausgabe von `openssl rand -base64 32`     |
+
+4. **Deploy.** Der Build führt `prisma migrate deploy` aus und legt das Schema
+   an.
 5. **Seed einmalig ausführen**, damit Übungen und Lebensmittel vorhanden sind:
    ```bash
-   DATABASE_URL="<neon-url>" npx tsx prisma/seed.ts
+   DATABASE_URL="<direkter-string>" DIRECT_URL="<direkter-string>" npx tsx prisma/seed.ts
    ```
+
+Warum zwei URLs? Migrationen nehmen Advisory Locks, die ein Pooler im
+Transaction-Mode nicht unterstützt — mit nur der gepoolten URL bricht der
+Build ab. Die laufende App wiederum braucht den Pooler, weil serverlose
+Funktionen sonst die Verbindungen der Datenbank aufbrauchen.
 
 ### Variante B — eigener Server oder Container
 

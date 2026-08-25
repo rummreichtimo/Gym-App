@@ -10,7 +10,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled connection for the running app: serverless functions open many
+  // short-lived connections and would otherwise exhaust the database.
+  url       = env("DATABASE_URL")
+  // Migrations need a direct connection - they take advisory locks, which a
+  // transaction-mode pooler (Neon, Supabase, PgBouncer) does not support.
+  // Point this at the unpooled string; locally both may be identical.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------

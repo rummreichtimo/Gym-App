@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { prisma } from './db';
-import { estimate1RM } from '@/lib/fitness';
 import { startOfWeek, toDateKey } from '@/lib/utils';
 import { notify } from './notifications';
 import type { GoalDto } from '@/types';

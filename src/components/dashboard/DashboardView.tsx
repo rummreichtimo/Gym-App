@@ -20,7 +20,7 @@ import { ProgressBar, ProgressRing } from '@/components/ui/Progress';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState, ErrorState, LoadingState, Skeleton } from '@/components/ui/States';
 import { formatWeight } from '@/lib/units';
-import { cn, formatDuration, formatNumber, greeting, relativeDay, toDateKey } from '@/lib/utils';
+import { cn, formatDuration, formatMacro, formatNumber, greeting, plural, relativeDay, toDateKey } from '@/lib/utils';
 import { PR_LABELS } from '@/lib/fitness';
 import type { DashboardDto } from '@/types';
 
@@ -91,7 +91,11 @@ export function DashboardView() {
         <StatTile
           icon={<Flame className="h-4 w-4" />}
           label="Streak"
-          value={streak.days > 0 ? `${streak.days} Tage` : `${streak.weeks} Wochen`}
+          value={
+            streak.days > 0
+              ? plural(streak.days, 'Tag', 'Tage')
+              : plural(streak.weeks, 'Woche', 'Wochen')
+          }
           hint={
             streak.days > 0
               ? 'in Folge trainiert'
@@ -368,7 +372,7 @@ function MacroRow({
       <div className="mb-1 flex items-baseline justify-between gap-2">
         <span className="truncate text-xs font-medium text-muted">{label}</span>
         <span className="shrink-0 text-xs font-semibold text-fg tabular-nums">
-          {formatNumber(value)} / {formatNumber(target)} g
+          {formatMacro(value)} / {formatNumber(target)} g
         </span>
       </div>
       <ProgressBar value={value} max={target} color={color} className="h-1.5" />

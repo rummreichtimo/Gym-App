@@ -91,8 +91,8 @@ export function Avatar({
   };
 
   if (src) {
-    // Data URLs from the client-side downscaler; next/image adds no value here.
-    // eslint-disable-next-line @next/next/no-img-element
+    // Data URLs from the client-side downscaler; next/image cannot optimise
+    // them and would only add a request.
     return (
       <img
         src={src}

@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/States';
 import { useToast } from '@/components/ui/Toast';
 import { DEFAULT_MEALS } from '@/lib/constants';
-import { formatNumber } from '@/lib/utils';
+import { formatMacro, formatNumber } from '@/lib/utils';
 import type { SavedMealDto } from '@/types';
 
 /** Re-add a frequently eaten meal to any day with two taps. */
@@ -84,7 +84,7 @@ export function SavedMealsSheet({
                   <p className="truncate text-sm font-semibold text-fg">{meal.name}</p>
                   <p className="mt-0.5 truncate text-xs text-subtle tabular-nums">
                     {formatNumber(meal.totals.calories)} kcal ·{' '}
-                    {formatNumber(meal.totals.protein, 1)} g P · {meal.items.length}{' '}
+                    {formatMacro(meal.totals.protein)} g P · {meal.items.length}{' '}
                     {meal.items.length === 1 ? 'Zutat' : 'Zutaten'}
                   </p>
                 </div>

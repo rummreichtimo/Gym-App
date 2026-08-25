@@ -30,7 +30,7 @@ import {
   TRAINING_GOALS,
   labelFor,
 } from '@/lib/constants';
-import { cmToDisplay, displayToCm, displayToKg, kgToDisplay } from '@/lib/units';
+import { cmToDisplay, displayToCm, kgToDisplay } from '@/lib/units';
 import { formatNumber } from '@/lib/utils';
 import type { DashboardDto, ProfileDto } from '@/types';
 

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useMounted } from '@/hooks/useMounted';
 import { CheckCircle2, Info, TriangleAlert, XCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,7 @@ let nextId = 1;
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const mounted = useMounted();
 
   const dismiss = useCallback((id: number) => {
     setToasts((current) => current.filter((t) => t.id !== id));
@@ -61,7 +63,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {typeof document !== 'undefined'
+      {mounted
         ? createPortal(
             <div className="pointer-events-none fixed inset-x-0 top-0 z-[200] flex flex-col items-center gap-2 p-4 pt-safe sm:items-end">
               {toasts.map((item) => (

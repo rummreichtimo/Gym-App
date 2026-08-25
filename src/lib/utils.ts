@@ -123,3 +123,16 @@ export function initials(name: string) {
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
 }
+
+/** "1 Tag" / "3 Tage" - avoids the classic off-by-one plural in German. */
+export function plural(count: number, singular: string, pluralForm: string) {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
+/**
+ * Macro values read better without a trailing ",0": whole numbers are shown
+ * without decimals, fractional ones with a single decimal.
+ */
+export function formatMacro(value: number) {
+  return formatNumber(value, Number.isInteger(value) ? 0 : 1);
+}

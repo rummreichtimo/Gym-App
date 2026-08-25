@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useMounted } from '@/hooks/useMounted';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +21,8 @@ export interface ModalProps {
  * Locks body scroll and closes on Escape / backdrop click.
  */
 export function Modal({ open, onClose, title, description, children, footer, size = 'md' }: ModalProps) {
+  const mounted = useMounted();
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -34,7 +37,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     };
   }, [open, onClose]);
 
-  if (!open || typeof document === 'undefined') return null;
+  if (!open || !mounted) return null;
 
   const widths = { sm: 'sm:max-w-sm', md: 'sm:max-w-lg', lg: 'sm:max-w-3xl' };
 

@@ -22,7 +22,7 @@ import { ErrorState, LoadingState } from '@/components/ui/States';
 import { useToast } from '@/components/ui/Toast';
 import { FoodPicker } from './FoodPicker';
 import { SavedMealsSheet } from './SavedMealsSheet';
-import { addDaysToKey, formatNumber, relativeDay, toDateKey } from '@/lib/utils';
+import { addDaysToKey, formatMacro, formatNumber, relativeDay, toDateKey } from '@/lib/utils';
 import type { MealDto, NutritionDayDto, SavedMealDto } from '@/types';
 
 interface DayResponse {
@@ -105,7 +105,6 @@ export function NutritionView() {
   });
 
   const day = data?.day;
-  const isToday = date === toDateKey();
 
   return (
     <PageShell>
@@ -155,8 +154,8 @@ export function NutritionView() {
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold text-fg">{meal.name}</h3>
                     <p className="mt-0.5 text-xs text-subtle tabular-nums">
-                      {formatNumber(meal.totals.calories)} kcal · {formatNumber(meal.totals.protein, 1)} g P
-                      · {formatNumber(meal.totals.carbs, 1)} g K · {formatNumber(meal.totals.fat, 1)} g F
+                      {formatNumber(meal.totals.calories)} kcal · {formatMacro(meal.totals.protein)} g P
+                      · {formatMacro(meal.totals.carbs)} g K · {formatMacro(meal.totals.fat)} g F
                     </p>
                   </div>
                   <div className="flex shrink-0">
@@ -191,8 +190,8 @@ export function NutritionView() {
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-fg">{item.name}</p>
                           <p className="mt-0.5 text-xs text-subtle tabular-nums">
-                            {formatNumber(item.calories)} kcal · {formatNumber(item.protein, 1)} g P ·{' '}
-                            {formatNumber(item.carbs, 1)} g K · {formatNumber(item.fat, 1)} g F
+                            {formatNumber(item.calories)} kcal · {formatMacro(item.protein)} g P ·{' '}
+                            {formatMacro(item.carbs)} g K · {formatMacro(item.fat)} g F
                           </p>
                         </div>
                         <AmountInput
@@ -372,7 +371,7 @@ function Macro({
       <div className="mb-1 flex items-baseline justify-between gap-2">
         <span className="text-sm font-medium text-muted">{label}</span>
         <span className="text-sm font-semibold text-fg tabular-nums">
-          {formatNumber(value, 1)} / {formatNumber(target)} g
+          {formatMacro(value)} / {formatNumber(target)} g
         </span>
       </div>
       <ProgressBar value={value} max={target} color={color} />

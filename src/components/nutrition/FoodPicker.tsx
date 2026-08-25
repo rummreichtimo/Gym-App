@@ -11,7 +11,7 @@ import { SearchInput } from '@/components/ui/SearchInput';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States';
 import { useToast } from '@/components/ui/Toast';
 import { FOOD_CATEGORIES, labelFor } from '@/lib/constants';
-import { formatNumber } from '@/lib/utils';
+import { formatMacro, formatNumber } from '@/lib/utils';
 import type { FoodDto } from '@/types';
 
 /** Scales a food's reference values to an arbitrary amount for live preview. */
@@ -223,8 +223,8 @@ export function FoodPicker({
                       {food.brand ? <span className="text-subtle"> · {food.brand}</span> : null}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-subtle tabular-nums">
-                      {formatNumber(food.calories)} kcal · {formatNumber(food.protein, 1)} g P ·{' '}
-                      {formatNumber(food.carbs, 1)} g K · {formatNumber(food.fat, 1)} g F pro{' '}
+                      {formatNumber(food.calories)} kcal · {formatMacro(food.protein)} g P ·{' '}
+                      {formatMacro(food.carbs)} g K · {formatMacro(food.fat)} g F pro{' '}
                       {formatNumber(food.servingSize)}{' '}
                       {food.servingUnit === 'piece' ? 'Stück' : food.servingUnit}
                     </span>

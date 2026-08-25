@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Download, Lock, Moon, Ruler, Target, Trash2, Volume2 } from 'lucide-react';
+import { Download, Lock, Moon, Ruler, Target, Trash2 } from 'lucide-react';
 import { api, ApiClientError, errorMessage } from '@/lib/api-client';
 import { PageShell } from '@/components/layout/PageShell';
 import { Card, CardHeader } from '@/components/ui/Card';

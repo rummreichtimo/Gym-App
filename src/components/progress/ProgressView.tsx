@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Camera, LineChart, Plus, Ruler, Scale } from 'lucide-react';
+import { LineChart, Plus, Ruler, Scale } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { PageShell } from '@/components/layout/PageShell';
 import { Card, CardHeader } from '@/components/ui/Card';

@@ -4,7 +4,6 @@ import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, Trash2, Upload } from 'lucide-react';
 import { api, errorMessage } from '@/lib/api-client';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal, ConfirmDialog } from '@/components/ui/Modal';
 import { Input, Select } from '@/components/ui/Input';
@@ -122,7 +121,6 @@ export function ProgressPhotos() {
               onClick={() => setPreview(photo)}
               className="tap group relative overflow-hidden rounded-2xl border border-border bg-surface"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo.imageData}
                 alt={`Fortschrittsfoto vom ${formatDate(photo.date)}`}
@@ -156,7 +154,6 @@ export function ProgressPhotos() {
       >
         {draft ? (
           <div className="space-y-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={draft.imageData}
               alt="Vorschau"
@@ -209,7 +206,6 @@ export function ProgressPhotos() {
         }
       >
         {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview.imageData}
             alt={`Fortschrittsfoto vom ${formatDate(preview.date)}`}

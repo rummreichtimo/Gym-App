@@ -27,12 +27,16 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  /// Null until the address was confirmed with a code. Verification is only
+  /// enforced when an email provider is configured (see src/server/email.ts).
+  emailVerifiedAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  profile          Profile?
-  sessions         Session[]
-  resetTokens      PasswordResetToken[]
+  profile            Profile?
+  sessions           Session[]
+  resetTokens        PasswordResetToken[]
+  verificationCodes  EmailVerificationCode[]
   plans            WorkoutPlan[]
   exercises        Exercise[]
   workoutSessions  WorkoutSession[]
@@ -53,6 +57,21 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Short-lived numeric code sent to a new user's address.
+model EmailVerificationCode {
+  id        String   @id @default(cuid())
+  /// Only the hash is stored, never the code itself.
+  codeHash  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  /// Guards against brute-forcing a six-digit code.
+  attempts  Int      @default(0)
   createdAt DateTime @default(now())
 
   @@index([userId])

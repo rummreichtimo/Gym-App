@@ -77,12 +77,43 @@ npm start                     # Port 3000
 Davor einen Reverse Proxy mit HTTPS setzen — die Session-Cookies werden in
 Produktion mit `secure` ausgeliefert und funktionieren nur über HTTPS.
 
+### E-Mail-Bestätigung aktivieren (optional)
+
+Ohne konfigurierten Versand ist ein neues Konto sofort nutzbar. Sind
+`RESEND_API_KEY` und `EMAIL_FROM` gesetzt, muss stattdessen jede Registrierung
+mit einem sechsstelligen Code aus der E-Mail bestätigt werden — und die Adresse
+in `ADMIN_EMAIL` bekommt bei jeder neuen Anmeldung eine Benachrichtigung.
+
+1. Konto bei [resend.com](https://resend.com) anlegen, unter *API Keys* einen
+   Key erzeugen.
+2. In Vercel drei weitere Environment Variables setzen:
+
+   | Name | Wert |
+   | --- | --- |
+   | `RESEND_API_KEY` | der Key von Resend (`re_…`) |
+   | `EMAIL_FROM` | Absender, z. B. `IronPath <noreply@deine-domain.de>` |
+   | `ADMIN_EMAIL` | deine Adresse für die Benachrichtigungen |
+
+3. Redeploy auslösen.
+
+> **Absender:** Resend verschickt nur von Domains, die dort verifiziert sind.
+> Ohne eigene Domain kannst du `onboarding@resend.dev` als Absender nutzen —
+> damit erreichst du allerdings **nur die Adresse deines eigenen
+> Resend-Kontos**. Sobald sich andere Leute registrieren sollen, musst du in
+> Resend eine Domain hinterlegen (zwei DNS-Einträge).
+
+Sicherheitseigenschaften des Codes: sechs Stellen aus `crypto.randomInt`, nur
+als Hash gespeichert, 30 Minuten gültig, nach sechs Fehlversuchen gesperrt, und
+ein neu angeforderter Code macht den alten sofort ungültig.
+
 ### Checkliste vor dem Livegang
 
 - [ ] `AUTH_SECRET` ist ein langer Zufallswert, nicht der Beispielwert
 - [ ] `DATABASE_URL` zeigt auf die Produktionsdatenbank
 - [ ] Die App ist über HTTPS erreichbar
 - [ ] Der erste Build lief durch (er legt Schema und Startdaten an)
+- [ ] Falls E-Mail gewünscht: `RESEND_API_KEY`, `EMAIL_FROM` und `ADMIN_EMAIL`
+      gesetzt und mit einer echten Registrierung getestet
 
 ---
 

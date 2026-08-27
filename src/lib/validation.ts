@@ -34,6 +34,14 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z.object({ email: emailSchema });
 
+export const verifyEmailSchema = z.object({
+  email: emailSchema,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Bitte gib den sechsstelligen Code aus der E-Mail ein.'),
+});
+
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Der Link ist ungültig.'),
   password: passwordSchema,

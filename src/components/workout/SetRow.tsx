@@ -97,10 +97,10 @@ export function SetRow({
         set.completed ? 'border-success/30 bg-success/5' : 'border-border bg-surface-2',
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         <span
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
+            'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center self-start rounded-lg text-sm font-bold',
             set.isWarmup
               ? 'bg-info/15 text-info'
               : set.completed
@@ -112,12 +112,13 @@ export function SetRow({
         </span>
 
         {/* Weight */}
-        <div className="flex min-w-0 flex-1 items-center gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => adjustWeight(-step)}
             aria-label="Gewicht verringern"
-            className="tap flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg"
+            className="tap hidden h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg min-[360px]:flex"
           >
             <Minus className="h-3.5 w-3.5" />
           </button>
@@ -132,27 +133,32 @@ export function SetRow({
             }}
             placeholder={previous ? String(round(kgToDisplay(previous.weightKg, weightUnit))) : '0'}
             aria-label={`Gewicht Satz ${index + 1} in ${weightUnit}`}
-            className="h-9 w-full min-w-0 rounded-lg border border-border bg-surface px-1 text-center text-sm font-semibold text-fg placeholder:text-subtle focus:border-brand focus:outline-none"
+            className="h-9 w-full min-w-[2.75rem] rounded-lg border border-border bg-surface px-1 text-center text-sm font-semibold text-fg placeholder:text-subtle focus:border-brand focus:outline-none"
           />
           <button
             type="button"
             onClick={() => adjustWeight(step)}
             aria-label="Gewicht erhöhen"
-            className="tap flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg"
+            className="tap hidden h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg min-[360px]:flex"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
+          </div>
+          <span className="text-center text-[10px] font-medium uppercase tracking-wide text-subtle">
+            {weightUnit}
+          </span>
         </div>
 
-        <span className="shrink-0 text-xs text-subtle">×</span>
+        <span className="shrink-0 self-start pt-2.5 text-xs text-subtle">×</span>
 
         {/* Reps */}
-        <div className="flex min-w-0 flex-1 items-center gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => adjustReps(-1)}
             aria-label="Wiederholungen verringern"
-            className="tap flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg"
+            className="tap hidden h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg min-[360px]:flex"
           >
             <Minus className="h-3.5 w-3.5" />
           </button>
@@ -166,16 +172,20 @@ export function SetRow({
             }}
             placeholder={previous ? String(previous.reps) : '0'}
             aria-label={`Wiederholungen Satz ${index + 1}`}
-            className="h-9 w-full min-w-0 rounded-lg border border-border bg-surface px-1 text-center text-sm font-semibold text-fg placeholder:text-subtle focus:border-brand focus:outline-none"
+            className="h-9 w-full min-w-[2.75rem] rounded-lg border border-border bg-surface px-1 text-center text-sm font-semibold text-fg placeholder:text-subtle focus:border-brand focus:outline-none"
           />
           <button
             type="button"
             onClick={() => adjustReps(1)}
             aria-label="Wiederholungen erhöhen"
-            className="tap flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg"
+            className="tap hidden h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-elevated text-muted transition-colors hover:text-fg min-[360px]:flex"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
+          </div>
+          <span className="text-center text-[10px] font-medium uppercase tracking-wide text-subtle">
+            Wdh.
+          </span>
         </div>
 
         <button
@@ -184,7 +194,7 @@ export function SetRow({
           disabled={saving}
           aria-label={set.completed ? 'Satz aktualisieren' : 'Satz abschließen'}
           className={cn(
-            'tap flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all active:scale-95',
+            'tap flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-lg transition-all active:scale-95',
             set.completed
               ? 'bg-success text-white'
               : 'bg-brand text-brand-fg',

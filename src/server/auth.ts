@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { randomBytes, scrypt, timingSafeEqual, createHash } from 'node:crypto';
+import { randomBytes, randomInt, scrypt, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
@@ -130,4 +130,76 @@ export async function consumePasswordResetToken(token: string): Promise<string |
     data: { usedAt: new Date() },
   });
   return record.userId;
+}
+
+// ---------------------------------------------------------------------------
+// Email verification codes
+// ---------------------------------------------------------------------------
+
+const CODE_TTL_MINUTES = 30;
+const MAX_CODE_ATTEMPTS = 6;
+
+/** Six digits, uniformly random - `randomInt` avoids modulo bias. */
+function generateCode(): string {
+  return String(randomInt(0, 1_000_000)).padStart(6, '0');
+}
+
+/**
+ * Issues a fresh verification code, replacing any earlier one so only the most
+ * recently sent code is ever valid.
+ */
+export async function createVerificationCode(userId: string): Promise<string> {
+  const code = generateCode();
+  await prisma.emailVerificationCode.deleteMany({ where: { userId } });
+  await prisma.emailVerificationCode.create({
+    data: {
+      codeHash: hashToken(code),
+      userId,
+      expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60_000),
+    },
+  });
+  return code;
+}
+
+export type VerificationResult =
+  | { status: 'ok' }
+  | { status: 'invalid' }
+  | { status: 'expired' }
+  | { status: 'too_many_attempts' };
+
+/**
+ * Checks a submitted code and, on success, marks the address as verified.
+ * Wrong guesses are counted so a six-digit code cannot be brute-forced.
+ */
+export async function verifyEmailCode(
+  userId: string,
+  code: string,
+): Promise<VerificationResult> {
+  const record = await prisma.emailVerificationCode.findFirst({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!record) return { status: 'expired' };
+
+  if (record.attempts >= MAX_CODE_ATTEMPTS) return { status: 'too_many_attempts' };
+
+  if (record.expiresAt.getTime() < Date.now()) {
+    await prisma.emailVerificationCode.deleteMany({ where: { userId } });
+    return { status: 'expired' };
+  }
+
+  if (record.codeHash !== hashToken(code.trim())) {
+    await prisma.emailVerificationCode.update({
+      where: { id: record.id },
+      data: { attempts: { increment: 1 } },
+    });
+    return { status: 'invalid' };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { emailVerifiedAt: new Date() },
+  });
+  await prisma.emailVerificationCode.deleteMany({ where: { userId } });
+  return { status: 'ok' };
 }

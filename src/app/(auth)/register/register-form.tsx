@@ -29,8 +29,20 @@ export function RegisterForm() {
     setFieldErrors({});
 
     try {
-      const data = await api.post<{ profile: ProfileDto }>('/api/auth/register', form);
-      setProfile(data.profile);
+      const data = await api.post<{
+        verificationRequired: boolean;
+        profile?: ProfileDto;
+        email?: string;
+      }>('/api/auth/register', form);
+
+      // With email verification switched on there is no session yet - the
+      // address has to be confirmed with the code we just sent.
+      if (data.verificationRequired) {
+        router.replace(`/verify?email=${encodeURIComponent(data.email ?? form.email)}`);
+        return;
+      }
+
+      if (data.profile) setProfile(data.profile);
       router.replace('/onboarding');
       router.refresh();
     } catch (caught) {

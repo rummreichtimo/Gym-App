@@ -32,6 +32,13 @@ export function LoginForm() {
       router.refresh();
     } catch (caught) {
       if (caught instanceof ApiClientError) {
+        // The account exists but was never confirmed - send them straight to
+        // the code screen instead of showing a dead end.
+        if (caught.details?.verification) {
+          await api.post('/api/auth/resend-code', { email }).catch(() => undefined);
+          router.replace(`/verify?email=${encodeURIComponent(email)}`);
+          return;
+        }
         setError(caught.message);
         setFieldErrors(caught.details ?? {});
       } else {

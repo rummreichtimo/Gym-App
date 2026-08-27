@@ -17,3 +17,6 @@ tsconfig.tsbuildinfo
 uitest.mjs
 shots.mjs
 dbg.mjs
+verifytest.mjs
+narrow.mjs
+dbg2.mjs

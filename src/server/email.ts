@@ -79,6 +79,36 @@ export function adminEmail(): string | null {
 interface SendResult {
   ok: boolean;
   error?: string;
+  /** Short German explanation, safe to show a user. */
+  hint?: string;
+}
+
+/**
+ * Turns an SMTP failure into something actionable. Providers report these very
+ * differently, so match on the response code and the message text.
+ */
+export function describeSmtpError(error: unknown): string {
+  const err = error as { code?: string; responseCode?: number; message?: string; response?: string };
+  const code = err?.code ?? '';
+  const status = err?.responseCode ?? 0;
+  const text = `${err?.response ?? ''} ${err?.message ?? ''}`.toLowerCase();
+
+  if (code === 'EAUTH' || status === 535 || status === 534 || text.includes('authentication')) {
+    return 'Anmeldung am Mailserver fehlgeschlagen - SMTP_USER oder SMTP_PASSWORD stimmen nicht.';
+  }
+  if (status === 550 || status === 553 || text.includes('sender') || text.includes('not valid')) {
+    return 'Der Absender wurde abgelehnt - die Adresse aus EMAIL_FROM muss beim Anbieter als Absender verifiziert sein.';
+  }
+  if (code === 'ECONNREFUSED' || code === 'ENOTFOUND' || code === 'EDNS') {
+    return 'Mailserver nicht erreichbar - SMTP_HOST ist falsch geschrieben.';
+  }
+  if (code === 'ETIMEDOUT' || code === 'ESOCKET' || code === 'ECONNECTION') {
+    return 'Verbindung zum Mailserver fehlgeschlagen - meist ein falscher SMTP_PORT (587 oder 465).';
+  }
+  if (status === 554 || text.includes('spam') || text.includes('blocked')) {
+    return 'Der Anbieter hat den Versand abgelehnt. Prüfe, ob dein Konto dort vollständig freigeschaltet ist.';
+  }
+  return 'Der Mailserver hat den Versand abgelehnt. Details stehen im Server-Log.';
 }
 
 interface Message {
@@ -128,8 +158,38 @@ async function sendViaSmtp(params: Message): Promise<SendResult> {
     });
     return { ok: true };
   } catch (error) {
-    console.error('[email] smtp send failed:', error);
-    return { ok: false, error: 'smtp' };
+    const hint = describeSmtpError(error);
+    console.error('[email] smtp send failed:', hint, error);
+    return { ok: false, error: 'smtp', hint };
+  }
+}
+
+/**
+ * Opens a connection and authenticates without sending anything, so a
+ * misconfiguration can be found without registering a throwaway account.
+ */
+export async function verifySmtpConnection(): Promise<{ ok: boolean; hint?: string }> {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  if (!host || !user || !pass) return { ok: false, hint: 'SMTP ist nicht vollständig konfiguriert.' };
+
+  const port = Number(process.env.SMTP_PORT ?? 587);
+  try {
+    const { createTransport } = await import('nodemailer');
+    await createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+    }).verify();
+    return { ok: true };
+  } catch (error) {
+    const hint = describeSmtpError(error);
+    console.error('[email] smtp verify failed:', hint, error);
+    return { ok: false, hint };
   }
 }
 

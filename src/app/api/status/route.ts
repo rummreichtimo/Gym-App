@@ -1,6 +1,12 @@
 import { prisma } from '@/server/db';
 import { ok, withErrorHandling } from '@/server/api';
-import { adminEmail, emailProvider, isEmailEnabled, missingEmailVars } from '@/server/email';
+import {
+  adminEmail,
+  emailProvider,
+  isEmailEnabled,
+  missingEmailVars,
+  verifySmtpConnection,
+} from '@/server/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +18,13 @@ export const dynamic = 'force-dynamic';
  * is not configured, and there was otherwise no way to tell from the outside
  * whether a deployment picked its variables up.
  */
-export const GET = withErrorHandling(async () => {
+export const GET = withErrorHandling(async (request) => {
+  // ?check=smtp opens a connection to the *configured* host - never one the
+  // caller can choose - so this cannot be pointed at a third party.
+  const runSmtpCheck =
+    new URL(request.url).searchParams.get('check') === 'smtp' && emailProvider() === 'smtp';
+  const smtp = runSmtpCheck ? await verifySmtpConnection() : null;
+
   let database: 'ok' | 'unreachable' = 'ok';
   let exercises = 0;
   let foods = 0;
@@ -45,6 +57,8 @@ export const GET = withErrorHandling(async () => {
       missing: emailConfigured ? [] : missingEmailVars(),
       adminNotifications: Boolean(adminEmail()) && emailConfigured,
       adminEmailSet: Boolean(adminEmail()),
+      // Only present when explicitly requested with ?check=smtp.
+      ...(smtp ? { connection: smtp.ok ? 'ok' : 'failed', hint: smtp.hint } : {}),
     },
     // The headline answer: does a new account have to confirm its address?
     verificationRequired: emailConfigured,

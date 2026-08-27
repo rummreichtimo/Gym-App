@@ -58,7 +58,9 @@ export const POST = withErrorHandling(async (request) => {
     // stays free and the user can simply try again.
     await prisma.user.delete({ where: { id: user.id } });
     throw new ApiError(
-      'Die Bestätigungs-E-Mail konnte nicht versendet werden. Bitte versuche es später erneut.',
+      result.hint
+        ? `Die Bestätigungs-E-Mail konnte nicht versendet werden: ${result.hint}`
+        : 'Die Bestätigungs-E-Mail konnte nicht versendet werden. Bitte versuche es später erneut.',
       502,
     );
   }

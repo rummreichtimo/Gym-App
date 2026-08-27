@@ -250,6 +250,12 @@ niemals einen Key, eine Adresse oder Nutzerdaten:
 - `seed.complete: false` → der Build hat die Startdaten nicht geladen
 - `email.missing` → nennt die Variablen, die fehlen
 - `email.provider` → `smtp` erreicht jede Adresse, `resend` erst mit verifizierter Domain
+
+Bei SMTP prüft `GET /api/status?check=smtp` zusätzlich die Verbindung: Es meldet
+sich am konfigurierten Server an, ohne etwas zu verschicken, und benennt bei
+einem Fehler die Ursache — falsches Passwort, falscher Host, falscher Port oder
+ein nicht verifizierter Absender. Der Server steht dabei fest in den
+Environment Variables, er lässt sich also nicht über die Anfrage steuern.
 - `verificationRequired: false` → neue Konten sind sofort nutzbar
 
 ## Datenmodell

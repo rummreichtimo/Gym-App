@@ -94,7 +94,10 @@ in `ADMIN_EMAIL` bekommt bei jeder neuen Anmeldung eine Benachrichtigung.
    | `EMAIL_FROM` | Absender, z. B. `IronPath <noreply@deine-domain.de>` |
    | `ADMIN_EMAIL` | deine Adresse für die Benachrichtigungen |
 
-3. Redeploy auslösen.
+3. Redeploy auslösen. **Neue Variablen greifen erst im nächsten Build** — ohne
+   Redeploy bleibt die Bestätigung aus.
+4. Prüfen, ob es angekommen ist: `https://deine-app.vercel.app/api/status`
+   muss `"verificationRequired": true` melden.
 
 > **Absender:** Resend verschickt nur von Domains, die dort verifiziert sind.
 > Ohne eigene Domain kannst du `onboarding@resend.dev` als Absender nutzen —
@@ -203,6 +206,25 @@ Registrierung, Login, Passwort zurücksetzen und ändern, Profil mit Bild,
 Einheiten (kg/lb, cm/in), Theme, Datenexport als JSON oder CSV, Kontolöschung.
 
 ---
+
+## Deployment prüfen
+
+`GET /api/status` beantwortet ohne Anmeldung, ob ein Deployment sauber
+hochgekommen ist. Es liefert ausschließlich Wahrheitswerte und Zählstände,
+niemals einen Key, eine Adresse oder Nutzerdaten:
+
+```json
+{
+  "database": "ok",
+  "seed": { "exercises": 55, "foods": 85, "complete": true },
+  "email": { "configured": true, "missing": [], "adminNotifications": true },
+  "verificationRequired": true
+}
+```
+
+- `seed.complete: false` → der Build hat die Startdaten nicht geladen
+- `email.missing` → nennt die Variablen, die fehlen
+- `verificationRequired: false` → neue Konten sind sofort nutzbar
 
 ## Datenmodell
 

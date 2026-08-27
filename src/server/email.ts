@@ -16,6 +16,28 @@ export function isEmailEnabled(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
+let warned = false;
+
+/**
+ * Says once per process why verification is off. Without this the feature just
+ * silently stays disabled and a half-finished configuration looks like it
+ * worked.
+ */
+export function warnIfEmailDisabled(): void {
+  if (warned || isEmailEnabled()) return;
+  warned = true;
+
+  const missing = [
+    process.env.RESEND_API_KEY ? null : 'RESEND_API_KEY',
+    process.env.EMAIL_FROM ? null : 'EMAIL_FROM',
+  ].filter(Boolean);
+
+  console.warn(
+    `[email] Verification is DISABLED - missing ${missing.join(' and ')}. ` +
+      'New accounts are usable immediately. Set both variables and redeploy to require a code.',
+  );
+}
+
 /** Address that receives a note whenever someone registers. */
 export function adminEmail(): string | null {
   return process.env.ADMIN_EMAIL?.trim() || null;

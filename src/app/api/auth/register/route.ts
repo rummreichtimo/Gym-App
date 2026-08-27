@@ -3,9 +3,16 @@ import { createSession, createVerificationCode, hashPassword } from '@/server/au
 import { ApiError, ok, parseBody, withErrorHandling } from '@/server/api';
 import { registerSchema } from '@/lib/validation';
 import { getProfile } from '@/server/profile';
-import { adminEmail, isEmailEnabled, sendNewUserNotification, sendVerificationEmail } from '@/server/email';
+import {
+  adminEmail,
+  isEmailEnabled,
+  sendNewUserNotification,
+  sendVerificationEmail,
+  warnIfEmailDisabled,
+} from '@/server/email';
 
 export const POST = withErrorHandling(async (request) => {
+  warnIfEmailDisabled();
   const { name, email, password } = await parseBody(request, registerSchema);
 
   const existing = await prisma.user.findUnique({ where: { email } });

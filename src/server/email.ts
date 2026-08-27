@@ -1,19 +1,57 @@
 import 'server-only';
 
 /**
- * Transactional email via Resend's HTTP API - no SMTP setup and no extra
- * dependency, which keeps it working on serverless hosts.
+ * Transactional email with two interchangeable backends:
  *
- * Everything here degrades gracefully: when no API key is configured the app
- * keeps working and email verification is simply not enforced
- * (see `isEmailEnabled`). That way a fresh deployment is never locked out.
+ * - **SMTP** (any mailbox: Gmail, GMX, Web.de, a provider's server). Sends from
+ *   an address you already own, so it reaches any recipient without owning a
+ *   domain. Preferred when SMTP_HOST is set.
+ * - **Resend** over HTTP. No SMTP setup, but the sender must belong to a domain
+ *   verified at Resend - otherwise delivery is limited to the account's own
+ *   address.
+ *
+ * Everything degrades gracefully: with neither configured the app keeps working
+ * and verification is simply not enforced (see `isEmailEnabled`), so a fresh
+ * deployment can never lock itself out.
  */
 
 // Overridable so the send path can be exercised against a local stub in tests.
 const RESEND_ENDPOINT = process.env.RESEND_ENDPOINT ?? 'https://api.resend.com/emails';
 
+export type EmailProvider = 'smtp' | 'resend' | null;
+
+/** SMTP wins when both are configured - it reaches arbitrary recipients. */
+export function emailProvider(): EmailProvider {
+  if (!process.env.EMAIL_FROM) return null;
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) return 'smtp';
+  if (process.env.RESEND_API_KEY) return 'resend';
+  return null;
+}
+
 export function isEmailEnabled(): boolean {
-  return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+  return emailProvider() !== null;
+}
+
+/**
+ * Names the variables still needed for the closest-to-complete configuration,
+ * so a half-finished setup says what is missing instead of failing silently.
+ */
+export function missingEmailVars(): string[] {
+  const missing: string[] = [];
+  if (!process.env.EMAIL_FROM) missing.push('EMAIL_FROM');
+
+  // Report against whichever backend the user started configuring.
+  const startedSmtp = Boolean(
+    process.env.SMTP_HOST || process.env.SMTP_USER || process.env.SMTP_PASSWORD,
+  );
+  if (startedSmtp) {
+    if (!process.env.SMTP_HOST) missing.push('SMTP_HOST');
+    if (!process.env.SMTP_USER) missing.push('SMTP_USER');
+    if (!process.env.SMTP_PASSWORD) missing.push('SMTP_PASSWORD');
+  } else if (!process.env.RESEND_API_KEY) {
+    missing.push('RESEND_API_KEY (oder SMTP_HOST/SMTP_USER/SMTP_PASSWORD)');
+  }
+  return missing;
 }
 
 let warned = false;
@@ -27,14 +65,9 @@ export function warnIfEmailDisabled(): void {
   if (warned || isEmailEnabled()) return;
   warned = true;
 
-  const missing = [
-    process.env.RESEND_API_KEY ? null : 'RESEND_API_KEY',
-    process.env.EMAIL_FROM ? null : 'EMAIL_FROM',
-  ].filter(Boolean);
-
   console.warn(
-    `[email] Verification is DISABLED - missing ${missing.join(' and ')}. ` +
-      'New accounts are usable immediately. Set both variables and redeploy to require a code.',
+    `[email] Verification is DISABLED - missing ${missingEmailVars().join(', ')}. ` +
+      'New accounts are usable immediately. Configure a provider and redeploy to require a code.',
   );
 }
 
@@ -48,12 +81,59 @@ interface SendResult {
   error?: string;
 }
 
-async function send(params: {
+interface Message {
   to: string;
   subject: string;
   html: string;
   text: string;
-}): Promise<SendResult> {
+}
+
+async function send(params: Message): Promise<SendResult> {
+  const provider = emailProvider();
+  if (!provider) return { ok: false, error: 'email not configured' };
+  return provider === 'smtp' ? sendViaSmtp(params) : sendViaResend(params);
+}
+
+/**
+ * Sends through a normal mailbox. `SMTP_PORT` 465 means implicit TLS; anything
+ * else (typically 587) upgrades via STARTTLS.
+ */
+async function sendViaSmtp(params: Message): Promise<SendResult> {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  const from = process.env.EMAIL_FROM;
+  if (!host || !user || !pass || !from) return { ok: false, error: 'smtp not configured' };
+
+  const port = Number(process.env.SMTP_PORT ?? 587);
+
+  try {
+    // Imported lazily so the Resend path pulls in no SMTP code.
+    const { createTransport } = await import('nodemailer');
+    const transport = createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+    });
+
+    await transport.sendMail({
+      from,
+      to: params.to,
+      subject: params.subject,
+      text: params.text,
+      html: params.html,
+    });
+    return { ok: true };
+  } catch (error) {
+    console.error('[email] smtp send failed:', error);
+    return { ok: false, error: 'smtp' };
+  }
+}
+
+async function sendViaResend(params: Message): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) return { ok: false, error: 'email not configured' };

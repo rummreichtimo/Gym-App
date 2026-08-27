@@ -1,6 +1,6 @@
 import { prisma } from '@/server/db';
 import { ok, withErrorHandling } from '@/server/api';
-import { adminEmail, isEmailEnabled } from '@/server/email';
+import { adminEmail, emailProvider, isEmailEnabled, missingEmailVars } from '@/server/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,11 +38,11 @@ export const GET = withErrorHandling(async () => {
     },
     email: {
       configured: emailConfigured,
-      // Which variable is missing, without revealing any value.
-      missing: [
-        process.env.RESEND_API_KEY ? null : 'RESEND_API_KEY',
-        process.env.EMAIL_FROM ? null : 'EMAIL_FROM',
-      ].filter(Boolean),
+      // 'smtp' reaches any recipient; 'resend' only does once its sending
+      // domain is verified.
+      provider: emailProvider(),
+      // Which variables are missing, without revealing any value.
+      missing: emailConfigured ? [] : missingEmailVars(),
       adminNotifications: Boolean(adminEmail()) && emailConfigured,
       adminEmailSet: Boolean(adminEmail()),
     },

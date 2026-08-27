@@ -79,31 +79,56 @@ Produktion mit `secure` ausgeliefert und funktionieren nur über HTTPS.
 
 ### E-Mail-Bestätigung aktivieren (optional)
 
-Ohne konfigurierten Versand ist ein neues Konto sofort nutzbar. Sind
-`RESEND_API_KEY` und `EMAIL_FROM` gesetzt, muss stattdessen jede Registrierung
-mit einem sechsstelligen Code aus der E-Mail bestätigt werden — und die Adresse
-in `ADMIN_EMAIL` bekommt bei jeder neuen Anmeldung eine Benachrichtigung.
+Ohne konfigurierten Versand ist ein neues Konto sofort nutzbar. Ist ein
+Versandweg eingerichtet, muss stattdessen jede Registrierung mit einem
+sechsstelligen Code aus der E-Mail bestätigt werden — und die Adresse in
+`ADMIN_EMAIL` bekommt bei jeder neuen Anmeldung eine Benachrichtigung.
 
-1. Konto bei [resend.com](https://resend.com) anlegen, unter *API Keys* einen
-   Key erzeugen.
-2. In Vercel drei weitere Environment Variables setzen:
+`EMAIL_FROM` wird immer gebraucht, dazu **einer** der beiden Wege.
 
-   | Name | Wert |
-   | --- | --- |
-   | `RESEND_API_KEY` | der Key von Resend (`re_…`) |
-   | `EMAIL_FROM` | Absender, z. B. `IronPath <noreply@deine-domain.de>` |
-   | `ADMIN_EMAIL` | deine Adresse für die Benachrichtigungen |
+#### Weg A — SMTP über ein vorhandenes Postfach
 
-3. Redeploy auslösen. **Neue Variablen greifen erst im nächsten Build** — ohne
-   Redeploy bleibt die Bestätigung aus.
-4. Prüfen, ob es angekommen ist: `https://deine-app.vercel.app/api/status`
-   muss `"verificationRequired": true` melden.
+Erreicht **jede** Empfängeradresse, ohne eigene Domain. Versendet wird aus
+deinem Postfach.
 
-> **Absender:** Resend verschickt nur von Domains, die dort verifiziert sind.
-> Ohne eigene Domain kannst du `onboarding@resend.dev` als Absender nutzen —
-> damit erreichst du allerdings **nur die Adresse deines eigenen
-> Resend-Kontos**. Sobald sich andere Leute registrieren sollen, musst du in
-> Resend eine Domain hinterlegen (zwei DNS-Einträge).
+| Name | Wert |
+| --- | --- |
+| `EMAIL_FROM` | `IronPath <deine-adresse@gmail.com>` — muss zu `SMTP_USER` passen |
+| `SMTP_HOST` | `smtp.gmail.com`, `mail.gmx.net`, `smtp.web.de`, … |
+| `SMTP_PORT` | `587` (bei `465` wird implizites TLS genutzt) |
+| `SMTP_USER` | deine vollständige E-Mail-Adresse |
+| `SMTP_PASSWORD` | **App-Passwort**, nicht dein normales Passwort |
+| `ADMIN_EMAIL` | wohin die Benachrichtigungen gehen |
+
+Bei Gmail: Zwei-Faktor-Anmeldung aktivieren, dann unter *Google-Konto →
+Sicherheit → App-Passwörter* eines erzeugen. GMX und Web.de verlangen, dass
+POP3/IMAP in den Einstellungen freigeschaltet ist.
+
+Grenzen: Gmail lässt rund 500 Mails pro Tag zu — für eine private App reichlich.
+Der Empfänger sieht deine private Adresse als Absender.
+
+#### Weg B — Resend über HTTP
+
+Kein SMTP nötig, saubere Zustellraten, eigener Absender wie
+`noreply@deine-domain.de`. Setzt aber eine Domain voraus.
+
+| Name | Wert |
+| --- | --- |
+| `EMAIL_FROM` | `IronPath <noreply@deine-domain.de>` |
+| `RESEND_API_KEY` | Key von [resend.com](https://resend.com/api-keys) (`re_…`) |
+| `ADMIN_EMAIL` | wohin die Benachrichtigungen gehen |
+
+> Resend verschickt nur von Domains, die dort verifiziert sind (unter *Domains*
+> hinzufügen, zwei DNS-Einträge setzen). Ohne eigene Domain funktioniert
+> `onboarding@resend.dev` als Absender — damit erreichst du allerdings **nur die
+> Adresse deines eigenen Resend-Kontos**. Für fremde Empfänger brauchst du
+> entweder eine Domain oder Weg A.
+
+Sind beide Wege konfiguriert, gewinnt SMTP.
+
+Nach dem Eintragen **Redeploy auslösen** — neue Variablen greifen erst im
+nächsten Build — und danach `/api/status` prüfen: dort muss
+`"verificationRequired": true` stehen.
 
 Sicherheitseigenschaften des Codes: sechs Stellen aus `crypto.randomInt`, nur
 als Hash gespeichert, 30 Minuten gültig, nach sechs Fehlversuchen gesperrt, und
@@ -115,8 +140,8 @@ ein neu angeforderter Code macht den alten sofort ungültig.
 - [ ] `DATABASE_URL` zeigt auf die Produktionsdatenbank
 - [ ] Die App ist über HTTPS erreichbar
 - [ ] Der erste Build lief durch (er legt Schema und Startdaten an)
-- [ ] Falls E-Mail gewünscht: `RESEND_API_KEY`, `EMAIL_FROM` und `ADMIN_EMAIL`
-      gesetzt und mit einer echten Registrierung getestet
+- [ ] Falls E-Mail gewünscht: ein Versandweg konfiguriert und mit einer echten
+      Registrierung an eine fremde Adresse getestet
 
 ---
 
@@ -217,13 +242,14 @@ niemals einen Key, eine Adresse oder Nutzerdaten:
 {
   "database": "ok",
   "seed": { "exercises": 55, "foods": 85, "complete": true },
-  "email": { "configured": true, "missing": [], "adminNotifications": true },
+  "email": { "configured": true, "provider": "smtp", "missing": [], "adminNotifications": true },
   "verificationRequired": true
 }
 ```
 
 - `seed.complete: false` → der Build hat die Startdaten nicht geladen
 - `email.missing` → nennt die Variablen, die fehlen
+- `email.provider` → `smtp` erreicht jede Adresse, `resend` erst mit verifizierter Domain
 - `verificationRequired: false` → neue Konten sind sofort nutzbar
 
 ## Datenmodell

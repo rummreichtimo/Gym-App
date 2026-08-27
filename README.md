@@ -56,12 +56,9 @@ Nötig sind zwei Dinge: ein Node-Host und eine PostgreSQL-Datenbank.
    | `DIRECT_URL`   | direkter Connection String                |
    | `AUTH_SECRET`  | Ausgabe von `openssl rand -base64 32`     |
 
-4. **Deploy.** Der Build führt `prisma migrate deploy` aus und legt das Schema
-   an.
-5. **Seed einmalig ausführen**, damit Übungen und Lebensmittel vorhanden sind:
-   ```bash
-   DATABASE_URL="<direkter-string>" DIRECT_URL="<direkter-string>" npx tsx prisma/seed.ts
-   ```
+4. **Deploy.** Das war's — der Build legt das Schema an und füllt die Übungs-
+   und Lebensmitteldatenbank. Es ist kein weiterer Schritt nötig, und der
+   gesamte Ablauf funktioniert im Browser, also auch vom Handy aus.
 
 Warum zwei URLs? Migrationen nehmen Advisory Locks, die ein Pooler im
 Transaction-Mode nicht unterstützt — mit nur der gepoolten URL bricht der
@@ -85,7 +82,7 @@ Produktion mit `secure` ausgeliefert und funktionieren nur über HTTPS.
 - [ ] `AUTH_SECRET` ist ein langer Zufallswert, nicht der Beispielwert
 - [ ] `DATABASE_URL` zeigt auf die Produktionsdatenbank
 - [ ] Die App ist über HTTPS erreichbar
-- [ ] Der Seed wurde einmal ausgeführt
+- [ ] Der erste Build lief durch (er legt Schema und Startdaten an)
 
 ---
 
@@ -215,7 +212,7 @@ verändert daher keine gespeicherten Werte.
 | Befehl               | Wirkung                                          |
 | -------------------- | ------------------------------------------------ |
 | `npm run dev`        | Entwicklungsserver                               |
-| `npm run build`      | Produktionsbuild inkl. Migration                 |
+| `npm run build`      | Produktionsbuild inkl. Migration und Seed        |
 | `npm start`          | Produktionsserver                                |
 | `npm run setup`      | Client, Migration und Seed-Daten in einem Schritt |
 | `npm run db:seed`    | Übungs- und Lebensmitteldatenbank neu befüllen   |

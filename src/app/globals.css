@@ -90,6 +90,38 @@
     background-clip: content-box;
   }
 
+  /*
+   * iOS Safari gives date and time inputs an intrinsic native width that
+   * ignores `width: 100%`, so they grow wider than the fields around them and
+   * push past the container. Stripping the native appearance and pinning the
+   * width keeps them in line with every other input.
+   *
+   * Alignment is deliberately not set here: an attribute selector carries the
+   * same weight as a class, so it would override utilities like `text-center`
+   * on the nutrition day picker.
+   */
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'],
+  input[type='month'] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Without this the picker icon sits outside the padding box on iOS. */
+  input[type='date']::-webkit-date-and-time-value,
+  input[type='time']::-webkit-date-and-time-value {
+    text-align: inherit;
+    margin: 0;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    margin-inline-start: 0;
+  }
+
   /* Remove spinner arrows: weight/rep fields use custom steppers. */
   input[type='number']::-webkit-outer-spin-button,
   input[type='number']::-webkit-inner-spin-button {

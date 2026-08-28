@@ -17,7 +17,7 @@ import {
   TRAINING_GOALS,
 } from '@/lib/constants';
 import { displayToCm, displayToKg, cmToDisplay, kgToDisplay } from '@/lib/units';
-import { cn, formatNumber } from '@/lib/utils';
+import { cn, formatNumber, toDateKey } from '@/lib/utils';
 import type { ProfileDto } from '@/types';
 
 type WeightUnit = 'kg' | 'lb';
@@ -267,6 +267,7 @@ function StepAbout({ form, update, errors }: StepProps) {
         label="Geburtsdatum (optional)"
         type="date"
         value={form.birthDate}
+        max={toDateKey()}
         onChange={(event) => update('birthDate', event.target.value)}
         hint="Hilft bei der Berechnung deines Kalorienbedarfs."
       />

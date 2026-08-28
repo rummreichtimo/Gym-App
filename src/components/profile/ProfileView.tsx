@@ -31,7 +31,7 @@ import {
   labelFor,
 } from '@/lib/constants';
 import { cmToDisplay, displayToCm, kgToDisplay } from '@/lib/units';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber, toDateKey } from '@/lib/utils';
 import type { DashboardDto, ProfileDto } from '@/types';
 
 export function ProfileView() {
@@ -297,6 +297,7 @@ function EditProfileModal({
           label="Geburtsdatum"
           type="date"
           value={form.birthDate}
+          max={toDateKey()}
           onChange={(event) => setForm({ ...form, birthDate: event.target.value })}
         />
         <Select

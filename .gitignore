@@ -21,3 +21,5 @@ verifytest.mjs
 narrow.mjs
 dbg2.mjs
 smtptest.mjs
+uxtest.mjs
+snap2.mjs

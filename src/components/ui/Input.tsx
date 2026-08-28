@@ -1,6 +1,7 @@
 'use client';
 
-import { forwardRef, useId } from 'react';
+import { forwardRef, useId, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface FieldProps {
@@ -14,9 +15,16 @@ export interface FieldProps {
 export const Input = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement> & FieldProps
->(function Input({ label, hint, error, suffix, className, id, ...props }, ref) {
+>(function Input({ label, hint, error, suffix, className, id, type, ...props }, ref) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
+
+  // Every password field gets a reveal toggle, so a typo can be spotted
+  // instead of guessed at.
+  const isPassword = type === 'password';
+  const [revealed, setRevealed] = useState(false);
+  const effectiveType = isPassword && revealed ? 'text' : type;
+
   return (
     <div className={cn('w-full', className)}>
       {label ? (
@@ -28,6 +36,7 @@ export const Input = forwardRef<
         <input
           ref={ref}
           id={inputId}
+          type={effectiveType}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           className={cn(
@@ -35,10 +44,25 @@ export const Input = forwardRef<
             'transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30',
             'disabled:opacity-60',
             suffix && 'pr-14',
+            isPassword && 'pr-11',
             error ? 'border-danger' : 'border-border',
           )}
           {...props}
         />
+        {isPassword ? (
+          <button
+            type="button"
+            // Not focusable by keyboard: tabbing through a form should go
+            // straight to the next field, not via the toggle.
+            tabIndex={-1}
+            onClick={() => setRevealed((value) => !value)}
+            aria-label={revealed ? 'Passwort verbergen' : 'Passwort anzeigen'}
+            aria-pressed={revealed}
+            className="tap absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-2 text-subtle transition-colors hover:text-fg"
+          >
+            {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        ) : null}
         {suffix ? (
           <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-subtle">
             {suffix}

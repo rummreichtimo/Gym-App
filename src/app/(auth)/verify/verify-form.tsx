@@ -11,18 +11,24 @@ import { useToast } from '@/components/ui/Toast';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProfileDto } from '@/types';
 
-const RESEND_COOLDOWN_SECONDS = 60;
+// Matches the server's limit. The server stays the real boundary - this only
+// keeps the button from inviting a pointless request.
+const RESEND_COOLDOWN_SECONDS = 30;
 
 export function VerifyForm() {
   const router = useRouter();
   const toast = useToast();
   const { setProfile } = useSession();
-  const email = useSearchParams().get('email') ?? '';
+  const params = useSearchParams();
+  const email = params.get('email') ?? '';
+  // Registration forwards with ?sent=1, so the countdown starts right away
+  // after the first code - but a later reload does not block the button.
+  const justSent = params.get('sent') === '1';
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
+  const [cooldown, setCooldown] = useState(justSent ? RESEND_COOLDOWN_SECONDS : 0);
   const submittedRef = useRef(false);
 
   // Countdown for the resend button.
@@ -71,9 +77,12 @@ export function VerifyForm() {
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setError(null);
     try {
-      await api.post('/api/auth/resend-code', { email });
+      const data = await api.post<{ retryAfter?: number }>('/api/auth/resend-code', { email });
+      // Trust the server's remaining time over the local guess.
+      if (typeof data?.retryAfter === 'number') setCooldown(data.retryAfter);
       toast.success('Neuer Code verschickt', 'Schau in dein Postfach.');
     } catch {
+      setCooldown(0);
       toast.error('Code konnte nicht verschickt werden', 'Bitte versuche es später erneut.');
     }
   }

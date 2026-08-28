@@ -36,7 +36,7 @@ export function LoginForm() {
         // the code screen instead of showing a dead end.
         if (caught.details?.verification) {
           await api.post('/api/auth/resend-code', { email }).catch(() => undefined);
-          router.replace(`/verify?email=${encodeURIComponent(email)}`);
+          router.replace(`/verify?email=${encodeURIComponent(email)}&sent=1`);
           return;
         }
         setError(caught.message);

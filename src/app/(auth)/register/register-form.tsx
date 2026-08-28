@@ -13,7 +13,7 @@ import type { ProfileDto } from '@/types';
 export function RegisterForm() {
   const router = useRouter();
   const { setProfile } = useSession();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
@@ -24,21 +24,32 @@ export function RegisterForm() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setLoading(true);
     setError(null);
     setFieldErrors({});
 
+    // Caught here rather than on the server: the confirmation only guards
+    // against a typo, it is not part of the account.
+    if (form.password !== form.confirm) {
+      setFieldErrors({ confirm: ['Die Passwörter stimmen nicht überein.'] });
+      return;
+    }
+
+    setLoading(true);
     try {
       const data = await api.post<{
         verificationRequired: boolean;
         profile?: ProfileDto;
         email?: string;
-      }>('/api/auth/register', form);
+      }>('/api/auth/register', {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      });
 
       // With email verification switched on there is no session yet - the
       // address has to be confirmed with the code we just sent.
       if (data.verificationRequired) {
-        router.replace(`/verify?email=${encodeURIComponent(data.email ?? form.email)}`);
+        router.replace(`/verify?email=${encodeURIComponent(data.email ?? form.email)}&sent=1`);
         return;
       }
 
@@ -98,6 +109,16 @@ export function RegisterForm() {
           onChange={(event) => update('password', event.target.value)}
           error={fieldErrors.password?.[0]}
           hint="Mindestens 8 Zeichen."
+          placeholder="••••••••"
+          required
+        />
+        <Input
+          label="Passwort wiederholen"
+          type="password"
+          autoComplete="new-password"
+          value={form.confirm}
+          onChange={(event) => update('confirm', event.target.value)}
+          error={fieldErrors.confirm?.[0]}
           placeholder="••••••••"
           required
         />

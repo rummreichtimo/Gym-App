@@ -232,6 +232,32 @@ Einheiten (kg/lb, cm/in), Theme, Datenexport als JSON oder CSV, Kontolöschung.
 
 ---
 
+## Nutzerübersicht (Admin)
+
+Unter `/admin` gibt es eine Live-Übersicht aller registrierten Konten: Name,
+E-Mail, Registrierungsdatum, Bestätigungsstatus, letzte Aktivität, Anzahl der
+Workouts insgesamt und in den letzten 30 Tagen sowie das Gesamtvolumen. Die
+Seite aktualisiert sich jede Minute selbst.
+
+Zugang hat ausschließlich das Konto, dessen E-Mail-Adresse `ADMIN_EMAIL`
+entspricht. Für alle anderen — auch für nicht angemeldete Besucher — antworten
+Seite und API mit „nicht gefunden", die Existenz ist also nicht erkennbar. Ohne
+gesetztes `ADMIN_EMAIL` ist niemand Administrator und der Bereich damit für
+niemanden erreichbar.
+
+Wichtig: Diese Adresse muss **auch als Konto in der App registriert** sein —
+die Prüfung vergleicht die angemeldete Sitzung mit `ADMIN_EMAIL`.
+
+Die Benachrichtigung über neue Registrierungen enthält einen direkten Link
+dorthin. Damit der stimmt, sollte `APP_URL` gesetzt sein:
+
+| Name | Wert |
+| --- | --- |
+| `APP_URL` | `https://deine-app.vercel.app` (ohne Schrägstrich am Ende) |
+
+Auf Vercel wird andernfalls automatisch die Produktionsdomain verwendet; ist
+auch die nicht verfügbar, entfällt der Link und die Mail weist darauf hin.
+
 ## Deployment prüfen
 
 `GET /api/status` beantwortet ohne Anmeldung, ob ein Deployment sauber

@@ -10,6 +10,7 @@ import {
   Flame,
   LogOut,
   Settings,
+  ShieldCheck,
   Target,
   Trophy,
   Zap,
@@ -44,6 +45,13 @@ export function ProfileView() {
   const { data: dashboard } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => api.get<{ dashboard: DashboardDto }>('/api/dashboard'),
+  });
+
+  // The server decides who sees the admin entry; the page and its API check
+  // again, so hiding it here is convenience, not the safeguard.
+  const { data: status } = useQuery({
+    queryKey: ['status'],
+    queryFn: () => api.get<{ isAdmin: boolean }>('/api/status'),
   });
 
   const saveAvatar = useMutation({
@@ -167,6 +175,13 @@ export function ProfileView() {
         <LinkRow href="/records" icon={<Trophy className="h-4 w-4" />} label="Persönliche Rekorde" />
         <LinkRow href="/notifications" icon={<Bell className="h-4 w-4" />} label="Benachrichtigungen" />
         <LinkRow href="/settings" icon={<Settings className="h-4 w-4" />} label="Einstellungen" />
+        {status?.isAdmin ? (
+          <LinkRow
+            href="/admin"
+            icon={<ShieldCheck className="h-4 w-4" />}
+            label="Nutzerübersicht"
+          />
+        ) : null}
       </div>
 
       <Button

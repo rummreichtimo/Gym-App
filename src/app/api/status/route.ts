@@ -7,6 +7,7 @@ import {
   missingEmailVars,
   verifySmtpConnection,
 } from '@/server/email';
+import { currentUserIsAdmin } from '@/server/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,9 @@ export const GET = withErrorHandling(async (request) => {
   const emailConfigured = isEmailEnabled();
 
   return ok({
+    // Whether the caller may open the admin area. Decided here, never by the
+    // client, and false for anyone not signed in as the configured admin.
+    isAdmin: await currentUserIsAdmin(),
     database,
     seed: {
       exercises,

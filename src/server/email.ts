@@ -71,6 +71,20 @@ export function warnIfEmailDisabled(): void {
   );
 }
 
+/**
+ * Public base URL of this deployment, used for links inside emails.
+ * Vercel provides the stable production domain; VERCEL_URL changes with every
+ * deployment and is only a last resort.
+ */
+export function appUrl(): string | null {
+  const explicit = process.env.APP_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, '');
+
+  const vercel =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() || process.env.VERCEL_URL?.trim();
+  return vercel ? `https://${vercel.replace(/\/$/, '')}` : null;
+}
+
 /** Address that receives a note whenever someone registers. */
 export function adminEmail(): string | null {
   return process.env.ADMIN_EMAIL?.trim() || null;
@@ -287,6 +301,7 @@ export async function sendNewUserNotification(params: {
   totalUsers: number;
 }): Promise<SendResult> {
   const { to, userName, userEmail, totalUsers } = params;
+  const dashboard = appUrl() ? `${appUrl()}/admin` : null;
 
   return send({
     to,
@@ -295,14 +310,25 @@ export async function sendNewUserNotification(params: {
       `Ein neuer Nutzer hat sich registriert.\n\n` +
       `Name:  ${userName}\n` +
       `E-Mail: ${userEmail}\n` +
-      `Nutzer insgesamt: ${totalUsers}\n`,
+      `Nutzer insgesamt: ${totalUsers}\n` +
+      (dashboard ? `\nAlle Nutzer ansehen: ${dashboard}\n` : ''),
     html: layout(
       'Neue Registrierung',
       `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;color:#12151c;">
          <tr><td style="padding:6px 0;color:#828b9d;width:120px;">Name</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(userName)}</td></tr>
          <tr><td style="padding:6px 0;color:#828b9d;">E-Mail</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(userEmail)}</td></tr>
          <tr><td style="padding:6px 0;color:#828b9d;">Nutzer gesamt</td><td style="padding:6px 0;font-weight:600;">${totalUsers}</td></tr>
-       </table>`,
+       </table>` +
+        (dashboard
+          ? `<p style="margin:22px 0 0;">
+               <a href="${dashboard}" style="display:inline-block;padding:12px 20px;background:${BRAND};color:#ffffff;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">Alle Nutzer ansehen</a>
+             </p>
+             <p style="margin:10px 0 0;font-size:12px;color:#828b9d;">
+               Nur mit deinem Konto (${escapeHtml(to)}) aufrufbar.
+             </p>`
+          : `<p style="margin:22px 0 0;font-size:12px;color:#828b9d;">
+               Setze APP_URL, damit hier ein Link zur Nutzerübersicht erscheint.
+             </p>`),
     ),
   });
 }
